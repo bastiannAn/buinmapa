@@ -285,16 +285,7 @@ map.on('click', (e) => {
 });
 
 // Configuración de Firebase (reemplaza con tus credenciales obtenidas en Firebase)
-const firebaseConfig = {
-    apiKey: "AIzaSyAEUxk7uxU5DEm68HpgYVtKRCtWFxkUHRM",
-    authDomain: "mapabuin.firebaseapp.com",
-    databaseURL: "https://mapabuin-default-rtdb.firebaseio.com",
-    projectId: "mapabuin",
-    storageBucket: "mapabuin.firebasestorage.app",
-    messagingSenderId: "432370344278",
-    appId: "1:432370344278:web:8f04f11c96a1818b1f36f7",
-    measurementId: "G-YJ2D0J042J"
-};
+
 
 // Inicializa Firebase
 const app = firebase.initializeApp(firebaseConfig);
