@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Completo</title>
+    
+    <!-- Incluir Bootstrap CSS (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Incluir Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+
+    <!-- Incluir el CSS para el geocoder -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+    
+    <!-- Mapa y contenedores -->
+    <div id="map" style="height: 100vh;"></div>
+    
+    <!-- Botón de agregar pin flotante -->
+    <button id="addPinButton" class="btn btn-primary rounded-circle position-absolute bottom-0 start-0 m-3 shadow">
+        +
+    </button>
+
+    <!-- Formulario de agregar pin -->
+    <div id="pinForm" class="hidden p-3 shadow bg-white rounded">
+        <h3>Agregar Pin</h3>
+        <form id="pinDataForm" class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label for="pinName" class="form-label">Nombre:</label>
+                <input type="text" id="pinName" class="form-control" placeholder="Nombre del lugar" required>
+            </div>
+            <div class="mb-3">
+                <label for="pinDescription" class="form-label">Descripción:</label>
+                <textarea id="pinDescription" class="form-control" placeholder="Descripción del lugar" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="pinImage" class="form-label">Subir Imagen:</label>
+                <input type="file" id="pinImage" class="form-control" accept="image/*">
+            </div>
+
+            <!-- Opciones de tipo de pin -->
+            <div class="mb-3">
+                <label>Tipo de Pin:</label>
+                <div>
+                    <h1></h1>
+                </div>
+                <div class="form-check">
+                    <input type="radio" name="pinType" value="grifo" class="form-check-input" checked>
+                    <label class="form-check-label">Grifo</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" name="pinType" value="acceso" class="form-check-input">
+                    <label class="form-check-label">Acceso</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" name="pinType" value="grifo_mal_estado" class="form-check-input">
+                    <label class="form-check-label">Grifo malo</label>
+                </div>
+            </div>
+
+            <button type="submit" id="submitPinButton" class="btn btn-success">Guardar</button>
+            <button type="button" id="cancelButton" class="btn btn-danger">Cancelar</button>
+        </form>
+    </div>
+
+    <!-- Pestaña lateral (sidebar) -->
+    <div id="sidebar" class="p-3 shadow bg-white rounded">
+        <button id="closeSidebar" class="btn-close float-end"></button>
+        <h2 id="info-title" class="mt-2">Información</h2>
+        <hr>
+        <p id="info-text"></p>
+        <hr>
+        <img id="info-image" src="" alt="Imagen relacionada" class="img-fluid mt-3 rounded">
+
+        <div id="sidebarActions" class="d-flex justify-content-between mt-4">
+        
+            <button type="button" id="updatePinButton" class="btn btn-primary">Actualizar</button>
+            <button type="button" id="deletePinButton" class="btn btn-primary">Eliminar</button>
+        </div>
+    </div>
+    <!-- Incluir Bootstrap JS y jQuery (CDN) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Incluir Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Incluir el JavaScript para el geocoder -->
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <!-- Incluir tu script.js -->
+    <script src="script.js"></script>
+
+    <!-- Incluir Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-firestore.js"></script>
+
+</body>
+</html>
