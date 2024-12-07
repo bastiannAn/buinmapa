@@ -201,6 +201,11 @@ map.on('click', (e) => {
 });
 
 // Configuración de Firebase (reemplaza con tus credenciales obtenidas en Firebase)
+
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-analytics.js";
+
 const firebaseConfig = {
     apiKey: "AIzaSyAEUxk7uxU5DEm68HpgYVtKRCtWFxkUHRM",
     authDomain: "mapabuin.firebaseapp.com",
@@ -210,7 +215,6 @@ const firebaseConfig = {
     messagingSenderId: "432370344278",
     appId: "1:432370344278:web:8f04f11c96a1818b1f36f7",
     measurementId: "G-YJ2D0J042J"
-    
 };
 
 const app = initializeApp(firebaseConfig);
