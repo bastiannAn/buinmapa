@@ -55,25 +55,57 @@ const accesoIcon = L.icon({
     popupAnchor: [1, -34],
 });
 
-// Guardar los datos de los pines en localStorage
-function guardarPinesEnLocalStorage(pines) {
-    localStorage.setItem('pines', JSON.stringify(pines));
+// Función para guardar un pin en Firestore
+function guardarPin(name, description, lat, lng, imageUrl, pinType) {
+    db.collection("pines").add({
+        name: name,
+        description: description,
+        coordinates: new firebase.firestore.GeoPoint(lat, lng),
+        imageUrl: imageUrl || '',
+        pinType: pinType
+    })
+    .then((docRef) => {
+        console.log("Pin guardado con ID: ", docRef.id);
+    })
+    .catch((error) => {
+        console.error("Error al guardar el pin: ", error);
+    });
 }
 
-// Cargar los pines desde localStorage
-function cargarPinesDesdeLocalStorage() {
-    const pinesGuardados = JSON.parse(localStorage.getItem('pines')) || [];
-    pinesGuardados.forEach(pin => {
-        agregarMarcador(pin.name, pin.description, pin.imageUrl, pin.pinType, pin.coords);
+
+
+// Función para mostrar información en la pestaña lateral
+function showSidebar(data, marker) {
+    pinForm.classList.add('hidden');
+    infoTitle.textContent = data.title || 'Sin título';
+    infoText.textContent = data.text || 'Sin descripción';
+    infoImage.src = data.image || '';
+    infoImage.style.display = data.image ? 'block' : 'none';
+
+    sidebar.classList.add('open');
+    currentMarker = marker; // Almacenar el marcador seleccionado
+}
+
+// Función para cargar pines desde Firestore
+function cargarPines() {
+    db.collection("pines").get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+            const pin = doc.data();
+            if (pin.coordinates) {
+                agregarMarcador(pin.name, pin.description, pin.imageUrl, pin.pinType, {
+                    lat: pin.coordinates.latitude,
+                    lng: pin.coordinates.longitude
+                });
+            }
+        });
+    }).catch((error) => {
+        console.error("Error al cargar los pines: ", error);
     });
 }
 
 // Función para agregar un marcador al mapa
 function agregarMarcador(name, description, imageUrl, pinType, coords = null) {
-    sidebar.classList.remove('open'); // Cerrar la pestaña lateral
     let icon;
-
-    // Asignar el ícono dependiendo del tipo de pin
     switch (pinType) {
         case 'acceso':
             icon = accesoIcon;
@@ -92,133 +124,19 @@ function agregarMarcador(name, description, imageUrl, pinType, coords = null) {
             <h3>${name}</h3>
             <p>${description}</p>
             ${imageUrl ? `<img src="${imageUrl}" alt="${name}" style="width: 100%; border-radius: 5px;">` : ''}
-        `)
-        .on('click', () => {
-            showSidebar({ title: name, text: description, image: imageUrl }, marker);
-        });
-
-    // **Nuevo cambio: Abrir el popup automáticamente al pasar el cursor sobre el ícono**
-    marker.on('mouseover', () => {
-        marker.openPopup(); // Abre el popup automáticamente al pasar el mouse
-    });
-
-    marker.on('mouseout', () => {
-        marker.closePopup(); // Cierra el popup cuando el mouse sale del ícono
-    });
-
-    // Guardar el pin en localStorage
-    if (!coords) {
-        const pinesGuardados = JSON.parse(localStorage.getItem('pines')) || [];
-        pinesGuardados.push({
-            name,
-            description,
-            imageUrl,
-            pinType,
-            coords: markerCoords,
-        });
-        guardarPinesEnLocalStorage(pinesGuardados);
-    }
-
-    showSidebar({ title: name, text: description, image: imageUrl }, marker);
-
-    pinForm.classList.add('hidden');
-    pinDataForm.reset();
-
-    if (tempMarker) map.removeLayer(tempMarker);
-    tempMarker = null;
-    selectedCoords = null;
-}
-
-// Función para mostrar información en la pestaña lateral
-function showSidebar(data, marker) {
-    pinForm.classList.add('hidden');
-    infoTitle.textContent = data.title || 'Sin título';
-    infoText.textContent = data.text || 'Sin descripción';
-    infoImage.src = data.image || '';
-    infoImage.style.display = data.image ? 'block' : 'none';
-
-    sidebar.classList.add('open');
-    currentMarker = marker; // Almacenar el marcador seleccionado
-}
-
-
-// Eliminar el pin seleccionado
-document.getElementById('deletePinButton').addEventListener('click', () => {
-    if (currentMarker) {
-        map.removeLayer(currentMarker); // Eliminar marcador del mapa
-        sidebar.classList.remove('open'); // Cerrar la pestaña lateral
-        currentMarker = null; // Limpiar el marcador seleccionado
-
-        // Actualizar localStorage
-        const pinesGuardados = JSON.parse(localStorage.getItem('pines')) || [];
-        const nuevosPines = pinesGuardados.filter(pin =>
-            pin.coords.lat !== currentMarker.getLatLng().lat ||
-            pin.coords.lng !== currentMarker.getLatLng().lng
-        );
-        guardarPinesEnLocalStorage(nuevosPines);
-    }
-});
-
-// Actualizar la información del pin
-document.getElementById('updatePinButton').addEventListener('click', () => {
-    if (currentMarker) {
-        // Obtener información actual del marcador
-        const name = infoTitle.textContent;
-        const description = infoText.textContent;
-        const image = infoImage.src;
-        sidebar.classList.remove('open');
-
-        // Mostrar formulario con la información actual
-        pinForm.classList.remove('hidden');
-        document.getElementById('pinName').value = name;
-        document.getElementById('pinDescription').value = description;
-
-        // Manejar actualización al guardar
-        pinDataForm.onsubmit = (event) => {
-            event.preventDefault();
-
-            const newName = document.getElementById('pinName').value;
-            const newDescription = document.getElementById('pinDescription').value;
-            const file = document.getElementById('pinImage').files[0];
-            let newImage = image; // Mantener la imagen actual si no se cambia
-
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (event) {
-                    newImage = event.target.result;
-                    actualizarMarcador(newName, newDescription, newImage);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                actualizarMarcador(newName, newDescription, newImage);
-            }
-        };
-    }
-});
-
-// Función para actualizar un marcador
-function actualizarMarcador(name, description, imageUrl) {
-    if (currentMarker) {
-        currentMarker.setPopupContent(`
-            <h3>${name}</h3>
-            <p>${description}</p>
-            ${imageUrl ? `<img src="${imageUrl}" alt="${name}" style="width: 100%; border-radius: 5px;">` : ''}
         `);
 
-        showSidebar({ title: name, text: description, image: imageUrl }, currentMarker);
-
-        pinForm.classList.add('hidden'); // Ocultar formulario
+    if (!coords) {
+        guardarPin(name, description, markerCoords.lat, markerCoords.lng, imageUrl, pinType);
     }
 }
+
 
 
 // Manejar clic en el mapa para posicionar un nuevo pin
 map.on('click', (e) => {
     selectedCoords = e.latlng;
-
-    if (tempMarker) map.removeLayer(tempMarker);
     tempMarker = L.marker([selectedCoords.lat, selectedCoords.lng]).addTo(map);
-
     pinForm.classList.remove('hidden');
 });
 
@@ -242,12 +160,10 @@ pinDataForm.onsubmit = (event) => {
     } else {
         agregarMarcador(name, description, null, pinType);
     }
+
+    pinForm.classList.add('hidden');
 };
 
-// Cargar los pines al iniciar
-document.addEventListener('DOMContentLoaded', () => {
-    cargarPinesDesdeLocalStorage();
-});
 
 // Botón cancelar
 cancelButton.addEventListener('click', () => {
@@ -295,58 +211,26 @@ const firebaseConfig = {
     
 };
 
-// Inicializa Firebase
 const app = firebase.initializeApp(firebaseConfig);
-
-// Obtener la referencia a Firestore
 const db = firebase.firestore();
 
-function guardarPin(name, description, lat, lng, imageUrl) {
-    // Referencia a la colección "pines" en Firestore
-    const pinsCollection = db.collection("pines");
-
-    // Agregar un nuevo documento con los datos del pin
-    pinsCollection.add({
-        name: name,
-        description: description,
-        coordinates: new firebase.firestore.GeoPoint(lat, lng),
-        imageUrl: imageUrl || ''
-    })
-    .then((docRef) => {
-        console.log("Pin guardado con ID: ", docRef.id);
-    })
-    .catch((error) => {
-        console.error("Error al guardar el pin: ", error);
-    });
-}
-
-function cargarPines() {
-    // Referencia a la colección "pines"
-    const pinsCollection = db.collection("pines");
-
-    // Obtener todos los pines
-    pinsCollection.get().then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-            const pin = doc.data();
-            const latLng = [pin.coordinates.latitude, pin.coordinates.longitude];
-
-            // Agregar marcador en el mapa
-            L.marker(latLng)
-                .addTo(map)
-                .bindPopup(`<strong>${pin.name}</strong><br>${pin.description}<br><img src="${pin.imageUrl}" alt="${pin.name}" width="100">`);
-        });
-    }).catch((error) => {
-        console.error("Error al obtener los pines: ", error);
-    });
-}
-
-window.onload = function() {
-    cargarPines();  // Cargar pines de Firestore cuando se inicia la página
-};
+// Cargar pines al iniciar la página
+document.addEventListener('DOMContentLoaded', () => {
+    cargarPines();
+});
 
 
 
 
+
+// **Nuevo cambio: Abrir el popup automáticamente al pasar el cursor sobre el ícono**
+marker.on('mouseover', () => {
+    marker.openPopup(); // Abre el popup automáticamente al pasar el mouse
+});
+
+marker.on('mouseout', () => {
+    marker.closePopup(); // Cierra el popup cuando el mouse sale del ícono
+});
 
 
 
